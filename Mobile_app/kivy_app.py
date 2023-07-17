@@ -7,6 +7,7 @@ from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
+from kivy.uix.popup import Popup
 from kivy.network.urlrequest import UrlRequest
 from kivy.clock import Clock
 from datetime import datetime
@@ -152,9 +153,27 @@ class KivyApp(App):
     def get_requests(self):
         address1 = f"{address}/getpaymentstatus"
         address2 = f"{address}/getdevicestatus"
-        pay_response = requests.get(address1, verify=False).json()['data']
-        dev_response = requests.get(address2, verify=False).json()['data']
-        return [pay_response, dev_response]
+        try:
+            pay_response = requests.get(address1, verify=False).json()['data']
+            dev_response = requests.get(address2, verify=False).json()['data']
+            return [pay_response, dev_response]
+        except requests.exceptions.HTTPError as errh:
+            self.log_in_app('HTTPError', 0, 0)
+            self.disable_buttons()
+            return [0, 0]
+        except requests.exceptions.ConnectionError as errc:
+            self.log_in_app('ConnectionError', 0, 0)
+            self.disable_buttons()
+            return [0, 0]
+    
+    def display_error(self, title, message):
+        content = Label(text=message)
+        popup = Popup(title=title, content=content, size_hint=(0.5, 0.5))
+        popup.open()
+        
+    def disable_buttons(self):
+        self.pay_button.disabled = True
+        self.on_off_button.disabled = True
         
     
 if __name__ == "__main__":
